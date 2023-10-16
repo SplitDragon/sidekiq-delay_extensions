@@ -10,7 +10,7 @@ module Sidekiq
         @klass ||= self["display_class"] || begin
           case klass
           when /\ASidekiq::DelayExtensions::Delayed/
-            safe_load(args[0], klass) do |target, method, _|
+            YAML.safe_load(args[0], klass) do |target, method, _|
               "#{target}.#{method}"
             end
           else
@@ -21,18 +21,19 @@ module Sidekiq
 
       def display_args
         # Unwrap known wrappers so they show up in a human-friendly manner in the Web UI
-        @display_args ||= case klass
-                  when /\ASidekiq::DelayExtensions::Delayed/
-                    safe_load(args[0], args) do |_, _, arg, kwarg|
-                      if !kwarg || kwarg.empty?
-                        arg
-                      else
-                        [arg, kwarg]
-                      end
-                    end
-                  else
-                    super
-        end
+        @display_args ||=
+          case klass
+          when /\ASidekiq::DelayExtensions::Delayed/
+            YAML.safe_load(args[0], args) do |_, _, arg, kwarg|
+              if !kwarg || kwarg.empty?
+                arg
+              else
+                [arg, kwarg]
+              end
+            end
+          else
+            super
+          end
       end
     end
   end
